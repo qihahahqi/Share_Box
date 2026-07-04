@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareBox - 内网文件分享</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon" data-icon="box"></span>
+            <span class="logo-text">ShareBox</span>
+        </div>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="搜索文件、照片、文字..." />
+            <button id="search-btn">搜索</button>
+        </div>
+        <button id="cleanup-btn" class="btn-warning"><span class="btn-icon-slot" data-icon="broom"></span> 清理</button>
+        <span id="connection-status">
+            <span class="connection-dot disconnected"></span>
+            <span class="connection-text">离线</span>
+        </span>
+    </header>
+
+    <!-- Main Content - 三种类型都在首页 -->
+    <main class="main-content">
+        <!-- 文字分享区域 -->
+        <section class="section-block">
+            <div class="section-header">
+                <h2><span class="section-icon" data-icon="fileText"></span> 文字分享</h2>
+                <span class="section-desc">快速分享文字内容</span>
+            </div>
+            <div class="text-input-area">
+                <textarea id="text-input" placeholder="输入要分享的文字，Ctrl+Enter 发送..." rows="3"></textarea>
+                <button id="share-text-btn" class="btn-primary">分享</button>
+            </div>
+            <div class="text-list" id="text-list"></div>
+        </section>
+
+        <!-- 文件区域 -->
+        <section class="section-block">
+            <div class="section-header">
+                <h2><span class="section-icon" data-icon="folder"></span> 文件</h2>
+                <span class="section-desc">上传和分享文件</span>
+            </div>
+            <div class="upload-area" id="files-upload">
+                <div class="drop-zone" id="files-drop-zone">
+                    <span class="drop-icon" data-icon="folder"></span>
+                    <span class="drop-text">拖拽文件到这里，或点击上传</span>
+                    <input type="file" id="files-input" hidden multiple />
+                </div>
+            </div>
+            <div class="file-list" id="file-list"></div>
+        </section>
+
+        <!-- 照片区域 -->
+        <section class="section-block">
+            <div class="section-header">
+                <h2><span class="section-icon" data-icon="image"></span> 照片</h2>
+                <span class="section-desc">上传和浏览图片</span>
+            </div>
+            <div class="upload-area" id="photos-upload">
+                <div class="drop-zone" id="photos-drop-zone">
+                    <span class="drop-icon" data-icon="image"></span>
+                    <span class="drop-text">拖拽图片到这里，或点击上传</span>
+                    <input type="file" id="photos-input" hidden accept="image/*" multiple />
+                </div>
+            </div>
+            <div class="photo-grid" id="photo-grid"></div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span id="stats-text">加载中...</span>
+        <span id="stats-spinner" class="spinner" style="display:none;"></span>
+    </footer>
+
+    <!-- Toast 提示 -->
+    <div id="toast-container"></div>
+
+    <!-- 搜索结果模态框 -->
+    <div id="search-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>搜索结果</h3>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body" id="search-results"></div>
+        </div>
+    </div>
+
+    <!-- 清理模态框 -->
+    <div id="cleanup-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>清理过期文件</h3>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body" id="cleanup-info"></div>
+            <div class="modal-footer">
+                <button id="cleanup-cancel" class="btn-secondary">取消</button>
+                <button id="cleanup-confirm" class="btn-warning">确认清理</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片预览模态框 -->
+    <div id="photo-modal" class="modal hidden">
+        <div class="modal-content modal-fullscreen">
+            <button class="modal-close">×</button>
+            <img id="photo-preview" src="" alt="预览" />
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-body center">
+                <p id="confirm-message">确认删除？</p>
+            </div>
+            <div class="modal-footer center">
+                <button id="confirm-cancel" class="btn-secondary">取消</button>
+                <button id="confirm-ok" class="btn-danger">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="js/icons.js"></script>
+    <script>
+    // 初始化静态 data-icon 元素（立即执行，避免闪烁）
+    (function() {
+        document.querySelectorAll('[data-icon]').forEach(function(el) {
+            var name = el.getAttribute('data-icon');
+            if (Icons[name]) el.innerHTML = Icons[name];
+        });
+    })();
+    </script>
+    <script src="js/api.js"></script>
+    <script src="js/socket.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/modules/share.js"></script>
+    <script src="js/modules/files.js"></script>
+    <script src="js/modules/photos.js"></script>
+    <script src="js/modules/cleanup.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
