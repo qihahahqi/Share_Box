@@ -37,10 +37,98 @@ class MetadataService:
             }
             self._save_metadata()
 
+        # 启动时自动修复数据一致性
+        self._repair_consistency()
+
     def _save_metadata(self):
         """保存元数据"""
         with open(self.metadata_file, 'w', encoding='utf-8') as f:
             json.dump(self.metadata, f, indent=2, ensure_ascii=False)
+
+    def _repair_consistency(self):
+        """修复数据一致性：清除孤儿文件和孤儿元数据"""
+        import logging
+        log = logging.getLogger(__name__)
+        repaired_files = 0
+        repaired_meta = 0
+        repaired_thumbs = 0
+
+        # 1. 清理孤儿物理文件（磁盘有但 metadata 无）
+        meta_file_ids = {f['id'] for f in self.metadata['files']}
+        meta_photo_ids = {p['id'] for p in self.metadata['photos']}
+
+        files_dir = os.path.join(self.data_dir, 'files')
+        if os.path.exists(files_dir):
+            for fname in os.listdir(files_dir):
+                parts = fname.split('_', 2)
+                if len(parts) >= 2:
+                    fid = parts[1]
+                    if fid not in meta_file_ids:
+                        fpath = os.path.join(files_dir, fname)
+                        try:
+                            os.remove(fpath)
+                            repaired_files += 1
+                        except OSError:
+                            pass
+
+        photos_dir = os.path.join(self.data_dir, 'photos')
+        if os.path.exists(photos_dir):
+            for fname in os.listdir(photos_dir):
+                parts = fname.split('_', 2)
+                if len(parts) >= 2:
+                    pid = parts[1]
+                    if pid not in meta_photo_ids:
+                        ppath = os.path.join(photos_dir, fname)
+                        try:
+                            os.remove(ppath)
+                            repaired_files += 1
+                        except OSError:
+                            pass
+
+        # 2. 清理孤儿 metadata（metadata 有但磁盘文件不存在）
+        valid_files = []
+        for f in self.metadata['files']:
+            fpath = os.path.join(files_dir, f['filename'])
+            if os.path.exists(fpath):
+                valid_files.append(f)
+            else:
+                repaired_meta += 1
+        self.metadata['files'] = valid_files
+
+        valid_photos = []
+        for p in self.metadata['photos']:
+            ppath = os.path.join(photos_dir, p['filename'])
+            if os.path.exists(ppath):
+                valid_photos.append(p)
+            else:
+                repaired_meta += 1
+        self.metadata['photos'] = valid_photos
+
+        # 3. 清理孤儿缩略图
+        thumbs_dir = os.path.join(self.data_dir, 'thumbnails')
+        if os.path.exists(thumbs_dir):
+            for fname in os.listdir(thumbs_dir):
+                tid = fname.replace('_thumb.jpg', '')
+                if tid not in meta_photo_ids:
+                    tpath = os.path.join(thumbs_dir, fname)
+                    try:
+                        os.remove(tpath)
+                        repaired_thumbs += 1
+                    except OSError:
+                        pass
+
+        if repaired_files or repaired_meta or repaired_thumbs:
+            self._save_metadata()
+            log.warning(
+                f'数据一致性修复: 清除 {repaired_files} 个孤儿文件, '
+                f'{repaired_meta} 条孤儿元数据, {repaired_thumbs} 个孤儿缩略图'
+            )
+
+        return {
+            'orphaned_files_removed': repaired_files,
+            'orphaned_metadata_removed': repaired_meta,
+            'orphaned_thumbnails_removed': repaired_thumbs
+        }
 
     def _generate_id(self):
         """生成唯一ID"""

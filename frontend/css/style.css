@@ -556,6 +556,39 @@ body {
     color: var(--text-secondary);
     font-size: 13px;
     border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* 修复数据按钮 */
+.btn-repair {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-repair:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: var(--bg-hover);
+}
+
+.btn-repair:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-repair .btn-icon-slot svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* Toast 提示 */

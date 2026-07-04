@@ -130,5 +130,8 @@ const API = {
     },
     health: async () => {
         return await API._fetch(`${API.baseUrl}/health`);
+    },
+    repair: async () => {
+        return await API._fetch(`${API.baseUrl}/repair`, { method: 'POST' });
     }
 };

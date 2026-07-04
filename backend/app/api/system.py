@@ -18,3 +18,10 @@ def stats():
     """存储统计"""
     stats_data = metadata_service.get_stats()
     return success(stats_data)
+
+
+@system_bp.route('/repair', methods=['POST'])
+def repair():
+    """手动触发数据一致性修复"""
+    result = metadata_service._repair_consistency()
+    return success(result, message='数据修复完成')

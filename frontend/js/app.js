@@ -9,6 +9,7 @@ const App = {
         this.searchModal = document.getElementById('search-modal');
         this.statsEl = document.getElementById('stats-text');
         this.statsSpinner = document.getElementById('stats-spinner');
+        this.repairBtn = document.getElementById('repair-btn');
 
         // 初始化WebSocket、Toast和Confirm
         Socket.init();
@@ -43,6 +44,9 @@ const App = {
         FilesModule.init();
         PhotosModule.init();
         CleanupModule.init();
+
+        // 修复按钮
+        this.repairBtn.addEventListener('click', () => this.repair());
 
         // 加载统计
         this.updateStats();
@@ -148,6 +152,36 @@ const App = {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    },
+
+    async repair() {
+        this.repairBtn.disabled = true;
+        Toast.info('正在修复数据...');
+        try {
+            const res = await API.repair();
+            if (res.success) {
+                const d = res.data;
+                const parts = [];
+                if (d.orphaned_files_removed) parts.push(`${d.orphaned_files_removed} 个孤儿文件`);
+                if (d.orphaned_metadata_removed) parts.push(`${d.orphaned_metadata_removed} 条孤儿记录`);
+                if (d.orphaned_thumbnails_removed) parts.push(`${d.orphaned_thumbnails_removed} 个孤儿缩略图`);
+                if (parts.length) {
+                    Toast.success(`修复完成：清除 ${parts.join('、')}`);
+                } else {
+                    Toast.success('数据完整，无需修复');
+                }
+                this.updateStats();
+                ShareModule.load();
+                FilesModule.load();
+                PhotosModule.load();
+            } else {
+                Toast.error(res.message || '修复失败');
+            }
+        } catch (err) {
+            Toast.error('修复失败，请重试');
+        } finally {
+            this.repairBtn.disabled = false;
+        }
     }
 };
 
